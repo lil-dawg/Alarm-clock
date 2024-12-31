@@ -3,8 +3,8 @@
 #include <liquidCrystal_I2C.h>
 #include <EEPROM.h>
 #include <PressButton.h>
-#include <custom_char.h>
-#include <encoder.h>
+#include "custom_char.h"
+#include "encoder.h"
 
 #define DISP_ITEM_ROWS 3 
 #define DISP_CHAR_WIDTH 20
@@ -65,24 +65,24 @@ void page_MenuSub4();
 void page_MenuSettings();
 
 // MENU INTERNALS ----------------------------------------------------------
-uint32_t loopStartMs;
-boolean updateAllItems;
-boolean updateItemValue;
-uint8_t itemCnt;
-uint8_t pntrPos;
-uint8_t dispOffset;
-uint8_t root_pntrPos = 1;
-uint8_t root_dispOffset = 0;
-uint8_t flashCntr;
-boolean flashIsOn;
-void initMenuPage(String title, uint8_t itemCount);
+unsigned int loopStartMs;
+bool updateAllItems;
+bool updateItemValue;
+unsigned char itemCnt;
+unsigned char pntrPos;
+unsigned char dispOffset;
+unsigned char root_pntrPos = 1;
+unsigned char root_dispOffset = 0;
+unsigned char flashCntr;
+bool flashIsOn;
+void initMenuPage(String title, unsigned char itemCount);
 void captureUserInput();
-void adjustBoolean(boolean *v);
-void adjustUint8_t(uint8_t *v, uint8_t min, uint8_t max);
+void adjustBool(bool *v);
+void adjustChar(unsigned char *v, unsigned char min, unsigned char max);
 void doPointerNavigation();
 bool isFlashChanged();
 void pacingWait();
-bool menuItemPrintable(uint8_t xPos, uint8_t yPos);
+bool menuItemPrintable(unsigned char xPos, unsigned char yPos);
 
 
 
@@ -90,18 +90,18 @@ bool menuItemPrintable(uint8_t xPos, uint8_t yPos);
 void printPointer();
 void printOffsetArrows();
 void printOnOff(bool val);
-void printUint32_tAtWidth(uint32_t value, uint8_t, char c, boolean isRight);
+void printintAtWidth(unsigned int value, unsigned char width, char c, bool isRight);
 
 // SETTINGS ----------------------------------------------------------------
 struct MySettings{
-  boolean Test1_OnOff = false;
-  uint8_t Test2_Num = 60;
-  uint8_t Test3_Num = 255;
-  uint8_t Test4_Num = 0;
-  boolean Test5_OnOff = false;
-  uint8_t Test6_Num = 197;
+  bool Test1_OnOff = false;
+  unsigned char Test2_Num = 60;
+  unsigned char Test3_Num = 255;
+  unsigned char Test4_Num = 0;
+  bool Test5_OnOff = false;
+  unsigned char Test6_Num = 197;
 
-  uint16_t settingCheckValue = SETTINGS_CHKVAL;
+  unsigned short settingCheckValue = SETTINGS_CHKVAL;
   
 };
 MySettings settings;
@@ -188,7 +188,6 @@ void page_MenuRoot(){
     //char encoder = readEncoder(CLK, DT, lastStateCLK);
     //if(encoder){Serial.println(int(encoder));}
 
-    
     doPointerNavigation();
 
     pacingWait();
@@ -391,11 +390,11 @@ void page_MenuSettings(){
 
     if(updateAllItems || updateItemValue){
       if(menuItemPrintable(14, 1)){printOnOff(settings.Test1_OnOff);}
-      if(menuItemPrintable(14, 2)){printUint32_tAtWidth(settings.Test2_Num, 3, ' ', false);}
-      if(menuItemPrintable(14, 3)){printUint32_tAtWidth(settings.Test3_Num, 3, ' ', false);}
-      if(menuItemPrintable(14, 4)){printUint32_tAtWidth(settings.Test4_Num, 3, ' ', false);}
+      if(menuItemPrintable(14, 2)){printintAtWidth(settings.Test2_Num, 3, ' ', false);}
+      if(menuItemPrintable(14, 3)){printintAtWidth(settings.Test3_Num, 3, ' ', false);}
+      if(menuItemPrintable(14, 4)){printintAtWidth(settings.Test4_Num, 3, ' ', false);}
       if(menuItemPrintable(14, 5)){printOnOff(settings.Test5_OnOff);}
-      if(menuItemPrintable(14, 6)){printUint32_tAtWidth(settings.Test6_Num, 3, ' ', false);}
+      if(menuItemPrintable(14, 6)){printintAtWidth(settings.Test6_Num, 3, ' ', false);}
     }
 
     if(isFlashChanged()){printPointer();}
@@ -410,12 +409,12 @@ void page_MenuSettings(){
     doPointerNavigation();
 
     switch(pntrPos){
-      case 1: adjustBoolean(&settings.Test1_OnOff); break;
-      case 2: adjustUint8_t(&settings.Test2_Num, 0, 255); break;
-      case 3: adjustUint8_t(&settings.Test3_Num, 0, 255); break;
-      case 4: adjustUint8_t(&settings.Test4_Num, 0, 255); break;
-      case 5: adjustBoolean(&settings.Test5_OnOff); break;
-      case 6: adjustUint8_t(&settings.Test6_Num, 0, 255); break;
+      case 1: adjustBool(&settings.Test1_OnOff); break;
+      case 2: adjustChar(&settings.Test2_Num, 0, 255); break;
+      case 3: adjustChar(&settings.Test3_Num, 0, 255); break;
+      case 4: adjustChar(&settings.Test4_Num, 0, 255); break;
+      case 5: adjustBool(&settings.Test5_OnOff); break;
+      case 6: adjustChar(&settings.Test6_Num, 0, 255); break;
     }
 
     if (btnOk.LongPressed()){sets_SetDefaults(); updateAllItems = true;}
@@ -427,15 +426,15 @@ void page_MenuSettings(){
 // =========================================================================
 //                          TOOLS - MENU INTERNALS
 // =========================================================================
-void initMenuPage(String title, uint8_t itemCount){
+void initMenuPage(String title, unsigned char itemCount){
   lcd.clear();
   lcd.setCursor(0,0);
 
-  uint8_t fillCnt = (DISP_CHAR_WIDTH - title.length()) / 2;
-  if (fillCnt > 0){for(uint8_t i = 0; i < fillCnt; i++){lcd.print(F("\04"));}}
+  unsigned char fillCnt = (DISP_CHAR_WIDTH - title.length()) / 2;
+  if (fillCnt > 0){for(unsigned char i = 0; i < fillCnt; i++){lcd.print(F("\04"));}}
   lcd.print(title);
   if ((title.length() % 2) == 1){fillCnt++;}
-  if (fillCnt > 0){for(uint8_t i = 0; i < fillCnt; i++){lcd.print(F("\05"));}}
+  if (fillCnt > 0){for(unsigned char i = 0; i < fillCnt; i++){lcd.print(F("\05"));}}
 
   btnUp.ClearWasDown();
   btnDown.ClearWasDown();
@@ -460,10 +459,10 @@ void captureUserInput(){
   btnPlus.CaptureDownState();
   btnMinus.CaptureDownState();
 }
-void adjustBoolean(boolean *v){
+void adjustBool(bool *v){
   if(btnPlus.PressRealeased() || btnMinus.PressRealeased()){*v = !*v; updateAllItems = true;}
 }
-void adjustUint8_t(uint8_t *v, uint8_t min, uint8_t max){
+void adjustChar(unsigned char *v, unsigned char min, unsigned char max){
   if(btnPlus.RepeatCnt == 0 && btnMinus.Repeated()){if (*v > min){*v = *v - 1; updateItemValue = true;}}
 
   if(btnMinus.RepeatCnt == 0 && btnPlus.Repeated()){if (*v < max){*v = *v + 1; updateItemValue = true;}}
@@ -502,10 +501,10 @@ void pacingWait(){
 
   loopStartMs = millis();
 }
-bool menuItemPrintable(uint8_t xPos, uint8_t yPos){
+bool menuItemPrintable(unsigned char xPos, unsigned char yPos){
   if(!(updateAllItems || (updateItemValue && pntrPos == yPos))){return false;}
 
-  uint8_t yMaxOffset = 0;
+  unsigned char yMaxOffset = 0;
 
   if(yPos > DISP_ITEM_ROWS) {yMaxOffset = yPos - DISP_ITEM_ROWS;}
 
@@ -537,24 +536,24 @@ void printOnOff(bool val){
   else {lcd.print(F("OFF"));}
 }
 
-void printChars(uint8_t cnt, char c){
+void printChars(unsigned char cnt, char c){
   if (cnt > 0){
     char cc[] = " "; cc[0] = c;
 
-    for (uint8_t i = 1; i <= cnt; i++){lcd.print(cc);}
+    for (unsigned char i = 1; i <= cnt; i++){lcd.print(cc);}
   }
 }
 
-uint8_t getUint32_tCharCnt(uint32_t value){
+unsigned char getintCharCnt(unsigned int value){
   if(value==0){return 1;}
-  uint32_t tensCalc = 10; uint8_t cnt = 1;
+  unsigned int tensCalc = 10; unsigned char cnt = 1;
 
   while (tensCalc <= value && cnt < 20){tensCalc *= 10; cnt +=1;}
   return cnt;
 }
 
-void printUint32_tAtWidth(uint32_t value, uint8_t width, char c, boolean isRight){
-  uint8_t numChars = getUint32_tCharCnt(value);
+void printintAtWidth(unsigned int value, unsigned char width, char c, bool isRight){
+  unsigned char numChars = getintCharCnt(value);
   if(isRight){printChars(width-numChars, c);}
   lcd.print(value);
 
