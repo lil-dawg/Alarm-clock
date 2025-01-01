@@ -4,7 +4,7 @@
 #include <EEPROM.h>
 #include <PressButton.h>
 #include "custom_char.h"
-#include "encoder.h"
+#include "rotaryEncoder.h"
 
 #define DISP_ITEM_ROWS 3 
 #define DISP_CHAR_WIDTH 20
@@ -15,33 +15,6 @@
 // =========================================================================
 //                               DECLARATIONS
 // =========================================================================
-
-// I/O PORT ALLOCATIONS ----------------------------------------------------
-const int BTN_BACK = 8;
-const int BTN_UP = 4;
-const int BTN_DOWN = 5;
-const int BTN_PLUS = 6;
-const int BTN_MINUS = 7;
-
-const int BTN_OK = 11;
-const int pinA = 2;
-const int pinB = 3;
-bool prevPinA = false;
-
-// BUTTONS -----------------------------------------------------------------
-PressButton btnOk(BTN_OK);
-PressButton btnBack(BTN_BACK);
-PressButton btnUp(BTN_UP);
-PressButton btnDown(BTN_DOWN);
-PressButton btnPlus(BTN_PLUS);
-PressButton btnMinus(BTN_MINUS);
-
-// ROTARY ENCODER ----------------------------------------------------------
-bool CWFlag = false;
-bool CCWFlag = false;
-char interruptDelay = 1;
-unsigned long prevTime;
-void interrupt();
 
 // MENU STRUCTURE ----------------------------------------------------------
 enum pageType {
@@ -77,14 +50,13 @@ unsigned char flashCntr;
 bool flashIsOn;
 void initMenuPage(String title, unsigned char itemCount);
 void captureUserInput();
-void adjustBool(bool *v);
-void adjustChar(unsigned char *v, unsigned char min, unsigned char max);
+bool adjustingValue = false;
+void adjustBool(bool *v, bool *adjustingValue);
+void adjustChar(unsigned char *v, bool *adjustingValue, unsigned char min, unsigned char max);
 void doPointerNavigation();
 bool isFlashChanged();
 void pacingWait();
 bool menuItemPrintable(unsigned char xPos, unsigned char yPos);
-
-
 
 // PRINT TOOLS -------------------------------------------------------------
 void printPointer();
@@ -116,6 +88,8 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 //                                  SETUP
 // =========================================================================
 void setup() {
+  encoder_setup(pinA, pinB, BTN_OK, prevPinA);
+
   lcd.init();
   createChars(lcd);
   lcd.backlight();
@@ -124,10 +98,6 @@ void setup() {
   sets_Load();
 
   // rotary encoder interrupt
-  pinMode(pinA, INPUT);
-  pinMode(pinB, INPUT);
-  attachInterrupt(digitalPinToInterrupt(pinA), interrupt, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(pinB), interrupt, CHANGE);
   prevTime = millis();
 
   Serial.begin(9600);
@@ -332,8 +302,6 @@ void page_MenuSub3(){
     updateAllItems = false;
 
     captureUserInput();
-    
-    if(btnBack.PressRealeased()){currPage = MENU_ROOT; return;}
 
     doPointerNavigation();
 
@@ -362,8 +330,6 @@ void page_MenuSub4(){
     updateAllItems = false;
 
     captureUserInput();
-    
-    if(btnBack.PressRealeased()){currPage = MENU_ROOT; return;}
 
     doPointerNavigation();
 
@@ -403,18 +369,17 @@ void page_MenuSettings(){
     updateItemValue = false;
 
     captureUserInput();
-    
-    if(btnBack.PressRealeased()){currPage = MENU_ROOT; sets_Save(); return;}
-
-    doPointerNavigation();
 
     switch(pntrPos){
-      case 1: adjustBool(&settings.Test1_OnOff); break;
-      case 2: adjustChar(&settings.Test2_Num, 0, 255); break;
-      case 3: adjustChar(&settings.Test3_Num, 0, 255); break;
-      case 4: adjustChar(&settings.Test4_Num, 0, 255); break;
-      case 5: adjustBool(&settings.Test5_OnOff); break;
-      case 6: adjustChar(&settings.Test6_Num, 0, 255); break;
+      case 1: adjustBool(&settings.Test1_OnOff, &adjustingValue); break;
+      case 2: adjustChar(&settings.Test2_Num, &adjustingValue, 0, 255); break;
+      case 3: adjustChar(&settings.Test3_Num, &adjustingValue, 0, 255); break;
+      case 4: adjustChar(&settings.Test4_Num, &adjustingValue, 0, 255); break;
+      case 5: adjustBool(&settings.Test5_OnOff, &adjustingValue); break;
+      case 6: adjustChar(&settings.Test6_Num, &adjustingValue, 0, 255); break;
+    }
+    if(!adjustingValue){
+      doPointerNavigation();
     }
 
     if (btnOk.LongPressed()){sets_SetDefaults(); updateAllItems = true;}
@@ -436,12 +401,7 @@ void initMenuPage(String title, unsigned char itemCount){
   if ((title.length() % 2) == 1){fillCnt++;}
   if (fillCnt > 0){for(unsigned char i = 0; i < fillCnt; i++){lcd.print(F("\05"));}}
 
-  btnUp.ClearWasDown();
-  btnDown.ClearWasDown();
   btnOk.ClearWasDown();
-  btnBack.ClearWasDown();
-  btnPlus.ClearWasDown();
-  btnMinus.ClearWasDown();
   
   itemCnt = itemCount;
   pntrPos = 1;
@@ -451,23 +411,20 @@ void initMenuPage(String title, unsigned char itemCount){
   updateAllItems = true;
   loopStartMs = millis();
 }
-void captureUserInput(){
-  btnUp.CaptureDownState();
-  btnDown.CaptureDownState();
-  btnOk.CaptureDownState();
-  btnBack.CaptureDownState();
-  btnPlus.CaptureDownState();
-  btnMinus.CaptureDownState();
+void adjustBool(bool *v, bool *adjustingValue){
+  if(*adjustingValue){
+    if(CWFlag || CCWFlag){*v = !*v; updateAllItems = true; CWFlag = false; CCWFlag = false;}
+  }
+  if(btnOk.PressRealeased()){*adjustingValue = !*adjustingValue; btnOk.ClearWasDown();}
 }
-void adjustBool(bool *v){
-  if(btnPlus.PressRealeased() || btnMinus.PressRealeased()){*v = !*v; updateAllItems = true;}
-}
-void adjustChar(unsigned char *v, unsigned char min, unsigned char max){
-  if(btnPlus.RepeatCnt == 0 && btnMinus.Repeated()){if (*v > min){*v = *v - 1; updateItemValue = true;}}
+void adjustChar(unsigned char *v, bool *adjustingValue, unsigned char min, unsigned char max){
+  if(*adjustingValue){
+    if(CWFlag){if (*v > min){*v = *v - 1; updateItemValue = true;} CWFlag = false;}
 
-  if(btnMinus.RepeatCnt == 0 && btnPlus.Repeated()){if (*v < max){*v = *v + 1; updateItemValue = true;}}
+    if(CCWFlag){if (*v < max){*v = *v + 1; updateItemValue = true;} CCWFlag = false;}
+  }
+  if(btnOk.PressRealeased()){*adjustingValue = !*adjustingValue; btnOk.ClearWasDown();}
 }
-
 void doPointerNavigation(){
   // if encoder rotate cw move up
   if(CWFlag && pntrPos > 1){
@@ -486,8 +443,6 @@ void doPointerNavigation(){
     pntrPos++;
   }
 }
-
-
 bool isFlashChanged(){
   if(flashCntr == 0){
     flashIsOn = !flashIsOn;
@@ -577,25 +532,4 @@ void sets_Load(){
 
 void sets_Save(){
   EEPROM.put(0, settings);
-}
-
-// =========================================================================
-//                      ROTARY ENCODER - INTERRUPT
-// =========================================================================
-
-void interrupt(){
-  if(millis() - prevTime > interruptDelay){
-  bool pinStateA = digitalRead(pinA);
-  if(pinStateA != prevPinA  && pinStateA == 1) {
-    if (digitalRead(pinB) != pinStateA) {
-			CCWFlag = true;
-      CWFlag = false;
-		} else {
-			CWFlag = true;
-      CCWFlag = false;
-		}
-  }
-  prevPinA = pinStateA;
-  prevTime = millis();
-  }
 }

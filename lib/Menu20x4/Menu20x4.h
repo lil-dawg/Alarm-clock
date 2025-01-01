@@ -9,12 +9,12 @@ class Menu20x4 {
 	private:
 		bool updateAllItems;
 		bool updateItemValue;
-		uint8_t itemCnt;
-		uint8_t pntrPos;
-		uint8_t dispOffset;
-		uint8_t root_pntrPos = 1;
-		uint8_t root_dispOffset = 0;
-		uint8_t flashCntr;
+		unsigned char itemCnt;
+		unsigned char pntrPos;
+		unsigned char dispOffset;
+		unsigned char root_pntrPos = 1;
+		unsigned char root_dispOffset = 0;
+		unsigned char flashCntr;
 		bool flashIsOn;
 };
 

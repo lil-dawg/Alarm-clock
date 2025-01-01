@@ -1,3 +1,6 @@
+#ifndef Pressbutton_h
+#define Pressbutton_h
+
 #include <Arduino.h>
 
 /*
@@ -22,3 +25,5 @@ public:
 	boolean LongPressed();				// provides a trigger for long press case
 	boolean Repeated();					// provides an action trigger at a increasingly higher frequency for as long as a key is held down > Clears WasDown state when trigger sent
 };
+
+#endif
