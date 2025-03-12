@@ -19,22 +19,18 @@
 // MENU STRUCTURE ----------------------------------------------------------
 enum pageType {
   MENU_ROOT,
-  MENU_SUB1,
-  MENU_SUB1_A,
-  MENU_SUB1_B,
-  MENU_SUB2,
-  MENU_SUB3,
-  MENU_SUB4,
+  MENU_MONITOR,
+  MENU_CONTROL,
+  MENU_LIGHTS,
+  MENU_MECHATRONICS,
   MENU_SETTINGS
 };
 enum pageType currPage = MENU_ROOT;
 void page_MenuRoot();
-void page_MenuSub1();
-void page_MenuSub1_A();
-void page_MenuSub1_B();
-void page_MenuSub2();
-void page_MenuSub3();
-void page_MenuSub4();
+void page_MenuMonitor();
+void page_MenuControl();
+void page_MenuLights();
+void page_MenuMechatronics();
 void page_MenuSettings();
 
 // MENU INTERNALS ----------------------------------------------------------
@@ -72,9 +68,7 @@ struct MySettings{
   unsigned char Test4_Num = 0;
   bool Test5_OnOff = false;
   unsigned char Test6_Num = 197;
-
   unsigned short settingCheckValue = SETTINGS_CHKVAL;
-  
 };
 MySettings settings;
 void sets_SetDefaults();
@@ -109,14 +103,11 @@ void setup() {
 void loop() {
   switch(currPage){
     case MENU_ROOT: page_MenuRoot();break;
-    case MENU_SUB1: page_MenuSub1();break;
-    case MENU_SUB1_A: page_MenuSub1_A();break;
-    case MENU_SUB1_B: page_MenuSub1_B();break;
-    case MENU_SUB2: page_MenuSub2();break;
-    case MENU_SUB3: page_MenuSub3();break;
-    case MENU_SUB4: page_MenuSub4();break;
+    case MENU_MONITOR: page_MenuMonitor();break;
+    case MENU_CONTROL: page_MenuControl();break;
+    case MENU_LIGHTS: page_MenuLights();break;
+    case MENU_MECHATRONICS: page_MenuMechatronics();break;
     case MENU_SETTINGS: page_MenuSettings();break;
-    
   }
 }
 
@@ -124,17 +115,15 @@ void loop() {
 //                                MENU ROOT
 // =========================================================================
 void page_MenuRoot(){
-  initMenuPage(F("Carinas Meny"), 5);
+  initMenuPage(F("Carinas Meny"), 3);
 
   pntrPos = root_pntrPos; dispOffset = root_dispOffset;
 
   while(true){
     if(updateAllItems){
-      if(menuItemPrintable(1, 1)){lcd.print(F("Tomat        "));}
-      if(menuItemPrintable(1, 2)){lcd.print(F("Gurka        "));}
-      if(menuItemPrintable(1, 3)){lcd.print(F("Physialis    "));}
-      if(menuItemPrintable(1, 4)){lcd.print(F("Sub Menu #4  "));}
-      if(menuItemPrintable(1, 5)){lcd.print(F("Installningar"));}
+      if(menuItemPrintable(1, 1)){lcd.print(F("Monitor      "));}
+      if(menuItemPrintable(1, 2)){lcd.print(F("Control      "));}
+      if(menuItemPrintable(1, 3)){lcd.print(F("Settings     "));}
 
       printOffsetArrows();
     }
@@ -148,11 +137,9 @@ void page_MenuRoot(){
     if(btnOk.PressRealeased()){
         root_pntrPos = pntrPos; root_dispOffset = dispOffset;
       switch(pntrPos){
-        case 1: currPage = MENU_SUB1; return;
-        case 2: currPage = MENU_SUB2; return;
-        case 3: currPage = MENU_SUB3; return;
-        case 4: currPage = MENU_SUB4; return;
-        case 5: currPage = MENU_SETTINGS; return;
+        case 1: currPage = MENU_MONITOR; return;
+        case 2: currPage = MENU_CONTROL; return;
+        case 3: currPage = MENU_SETTINGS; return;
       }
     }
     //char encoder = readEncoder(CLK, DT, lastStateCLK);
@@ -165,99 +152,45 @@ void page_MenuRoot(){
 };
 
 // =========================================================================
-//                                MENU SUB#1
+//                                MENU MONITOR
 // =========================================================================
-void page_MenuSub1(){
-  initMenuPage(F("SUB MENU 1"), 3);
-
+void page_MenuMonitor(){
+  initMenuPage(F("Monitor"), 3);
+  
   while(true){
     if(updateAllItems){
-      if(menuItemPrintable(1, 1)){lcd.print(F("Sub Menu #1_A"));}
-      if(menuItemPrintable(1, 2)){lcd.print(F("Sub Menu #2_B"));}
+      if(menuItemPrintable(1, 1)){lcd.print(F("Inside temp  "));}
+      if(menuItemPrintable(1, 2)){lcd.print(F("Outside temp "));}
       if(menuItemPrintable(1, 3)){lcd.print(F("Return       "));}
-
+      
       printOffsetArrows();
     }
-
+    
     if(isFlashChanged()){printPointer();}
-
+    
     updateAllItems = false;
-
+    
     captureUserInput();
-
+    
     if(btnOk.PressRealeased()){
       switch(pntrPos){
-        case 1: currPage = MENU_SUB1_A; return;
-        case 2: currPage = MENU_SUB1_B; return;
+        case 1: ;
+        case 2: ;
         case 3: currPage = MENU_ROOT; return;
       }
     }
 
     doPointerNavigation();
-
+    
     pacingWait();
   }
 };
 
 // =========================================================================
-//                                MENU SUB#1_A
+//                                MENU CONTROL
 // =========================================================================
-void page_MenuSub1_A(){
-initMenuPage(F("SUB MENU 1_A"), 1);
-
-  while(true){
-    if(updateAllItems){
-      if(menuItemPrintable(1, 1)){lcd.print(F("No items here!"));}
-
-      printOffsetArrows();
-    }
-
-    if(isFlashChanged()){printPointer();}
-
-    updateAllItems = false;
-
-    captureUserInput();
-    
-    if(btnOk.PressRealeased()){currPage = MENU_SUB1; return;}
-
-    doPointerNavigation();
-
-    pacingWait();
-  }
-}
-
-// =========================================================================
-//                                MENU SUB#1_B
-// =========================================================================
-void page_MenuSub1_B(){
-  initMenuPage(F("SUB MENU 1_B"), 1);
-
-  while(true){
-    if(updateAllItems){
-      if(menuItemPrintable(1, 1)){lcd.print(F("No items here!"));}
-
-      printOffsetArrows();
-    }
-
-    if(isFlashChanged()){printPointer();}
-
-    updateAllItems = false;
-
-    captureUserInput();
-    
-    if(btnOk.PressRealeased()){currPage = MENU_SUB1; return;}
-
-    doPointerNavigation();
-
-    pacingWait();
-  }
-};
-
-// =========================================================================
-//                                MENU SUB#2
-// =========================================================================
-void page_MenuSub2(){
-  initMenuPage(F("SUB MENU 2"), 3);
+void page_MenuControl(){
+  initMenuPage(F("Control"), 3);
 
   while(true){
     if(updateAllItems){
@@ -281,6 +214,61 @@ void page_MenuSub2(){
     pacingWait();
   }
 }
+
+// =========================================================================
+//                                MENU LIGHTS
+// =========================================================================
+void page_MenuLights(){
+  initMenuPage(F("Lights"), 1);
+  
+  while(true){
+    if(updateAllItems){
+      if(menuItemPrintable(1, 1)){lcd.print(F("No items here!"));}
+
+      printOffsetArrows();
+    }
+
+    if(isFlashChanged()){printPointer();}
+
+    updateAllItems = false;
+
+    captureUserInput();
+    
+    if(btnOk.PressRealeased()){currPage = MENU_ROOT; return;}
+
+    doPointerNavigation();
+
+    pacingWait();
+  }
+}
+
+// =========================================================================
+//                                MENU MECHATRONICS 
+// =========================================================================
+void page_MenuMechatronics(){
+  initMenuPage(F("Mechatronics"), 1);
+
+  while(true){
+    if(updateAllItems){
+      if(menuItemPrintable(1, 1)){lcd.print(F("No items here!"));}
+
+      printOffsetArrows();
+    }
+
+    if(isFlashChanged()){printPointer();}
+
+    updateAllItems = false;
+
+    captureUserInput();
+    
+    if(btnOk.PressRealeased()){currPage = MENU_CONTROL; return;}
+
+    doPointerNavigation();
+
+    pacingWait();
+  }
+};
+
 
 // =========================================================================
 //                                MENU SUB#3
@@ -341,7 +329,7 @@ void page_MenuSub4(){
 //                               MENU SETTINGS
 // =========================================================================
 void page_MenuSettings(){
-  initMenuPage(F("SETTINGS"), 6);
+  initMenuPage(F("SETTINGS"), 7);
 
   while(true){
     if(updateAllItems){
@@ -351,6 +339,7 @@ void page_MenuSettings(){
       if(menuItemPrintable(1, 4)){lcd.print(F("Setting #4 = "));}
       if(menuItemPrintable(1, 5)){lcd.print(F("Setting #5 = "));}
       if(menuItemPrintable(1, 6)){lcd.print(F("Setting #6 = "));}
+      if(menuItemPrintable(1, 7)){lcd.print(F("Return       "));}
       printOffsetArrows();
     }
 
@@ -361,6 +350,7 @@ void page_MenuSettings(){
       if(menuItemPrintable(14, 4)){printintAtWidth(settings.Test4_Num, 3, ' ', false);}
       if(menuItemPrintable(14, 5)){printOnOff(settings.Test5_OnOff);}
       if(menuItemPrintable(14, 6)){printintAtWidth(settings.Test6_Num, 3, ' ', false);}
+      if(menuItemPrintable(14, 7)){lcd.print(F("   "));}
     }
 
     if(isFlashChanged()){printPointer();}
@@ -377,6 +367,7 @@ void page_MenuSettings(){
       case 4: adjustChar(&settings.Test4_Num, &adjustingValue, 0, 255); break;
       case 5: adjustBool(&settings.Test5_OnOff, &adjustingValue); break;
       case 6: adjustChar(&settings.Test6_Num, &adjustingValue, 0, 255); break;
+      case 7: if(btnOk.PressRealeased()){currPage = MENU_ROOT; btnOk.ClearWasDown(); return;} 
     }
     if(!adjustingValue){
       doPointerNavigation();
