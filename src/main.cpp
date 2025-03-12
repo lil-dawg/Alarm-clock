@@ -102,12 +102,12 @@ void setup() {
 // =========================================================================
 void loop() {
   switch(currPage){
-    case MENU_ROOT: page_MenuRoot();break;
-    case MENU_MONITOR: page_MenuMonitor();break;
-    case MENU_CONTROL: page_MenuControl();break;
-    case MENU_LIGHTS: page_MenuLights();break;
-    case MENU_MECHATRONICS: page_MenuMechatronics();break;
-    case MENU_SETTINGS: page_MenuSettings();break;
+    case MENU_ROOT: page_MenuRoot(); break;
+    case MENU_MONITOR: page_MenuMonitor(); break;
+    case MENU_CONTROL: page_MenuControl(); break;
+    case MENU_LIGHTS: page_MenuLights(); break;
+    case MENU_MECHATRONICS: page_MenuMechatronics(); break;
+    case MENU_SETTINGS: page_MenuSettings(); break;
   }
 }
 
@@ -194,8 +194,8 @@ void page_MenuControl(){
 
   while(true){
     if(updateAllItems){
-      if(menuItemPrintable(1, 1)){lcd.print(F("Something One"));}
-      if(menuItemPrintable(1, 2)){lcd.print(F("Something Two"));}
+      if(menuItemPrintable(1, 1)){lcd.print(F("Lights       "));}
+      if(menuItemPrintable(1, 2)){lcd.print(F("Mechatronics "));}
       if(menuItemPrintable(1, 3)){lcd.print(F("Return       "));}
 
       printOffsetArrows();
@@ -206,8 +206,14 @@ void page_MenuControl(){
     updateAllItems = false;
 
     captureUserInput();
-    
-    if(btnOk.PressRealeased() && pntrPos == 3){currPage = MENU_ROOT; return;}
+
+    if(btnOk.PressRealeased()){
+      switch(pntrPos){
+        case 1: currPage = MENU_LIGHTS; return;
+        case 2: currPage = MENU_MECHATRONICS; return;
+        case 3: currPage = MENU_ROOT; return;
+      }
+    }
 
     doPointerNavigation();
 
@@ -234,7 +240,7 @@ void page_MenuLights(){
 
     captureUserInput();
     
-    if(btnOk.PressRealeased()){currPage = MENU_ROOT; return;}
+    if(btnOk.PressRealeased()){currPage = MENU_CONTROL; return;}
 
     doPointerNavigation();
 
@@ -262,62 +268,6 @@ void page_MenuMechatronics(){
     captureUserInput();
     
     if(btnOk.PressRealeased()){currPage = MENU_CONTROL; return;}
-
-    doPointerNavigation();
-
-    pacingWait();
-  }
-};
-
-
-// =========================================================================
-//                                MENU SUB#3
-// =========================================================================
-void page_MenuSub3(){
-  initMenuPage(F("SUB MENU 3"), 3);
-
-  while(true){
-    if(updateAllItems){
-      if(menuItemPrintable(1, 1)){lcd.print(F("Something One  "));}
-      if(menuItemPrintable(1, 2)){lcd.print(F("Something Two  "));}
-      if(menuItemPrintable(1, 3)){lcd.print(F("Something Three"));}
-
-      printOffsetArrows();
-    }
-
-    if(isFlashChanged()){printPointer();}
-
-    updateAllItems = false;
-
-    captureUserInput();
-
-    doPointerNavigation();
-
-    pacingWait();
-  }
-};
-
-// =========================================================================
-//                                MENU SUB#4
-// =========================================================================
-void page_MenuSub4(){
-  initMenuPage(F("SUB MENU 4"), 4);
-
-  while(true){
-    if(updateAllItems){
-      if(menuItemPrintable(1, 1)){lcd.print(F("Something One  "));}
-      if(menuItemPrintable(1, 2)){lcd.print(F("Something Two  "));}
-      if(menuItemPrintable(1, 3)){lcd.print(F("Something Three"));}
-      if(menuItemPrintable(1, 4)){lcd.print(F("Something Four "));}
-
-      printOffsetArrows();
-    }
-
-    if(isFlashChanged()){printPointer();}
-
-    updateAllItems = false;
-
-    captureUserInput();
 
     doPointerNavigation();
 
